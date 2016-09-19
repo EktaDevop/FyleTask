@@ -1,0 +1,140 @@
+<head>
+
+<style>
+#banknames
+{
+    font-size: 16px;
+    padding: 14px 20px 12px 45px;
+    border: 1px solid;
+}
+
+#search
+{
+  padding:16px;
+  
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th,td {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+
+.city-dropdown.show {
+   display:block;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+
+</style>
+
+</head>
+
+<body>
+  <h1 align="center"> Bank Branches</h1>
+  <div id="dropdown">
+	<select onchange="fetchJSON(this.value.toUpperCase())">
+		<option>Bangalore</option>
+		<option>Hyderabad</option>
+		<option>Delhi</option>
+		<option>Kolkata</option>
+		<option>Ranchi</option>
+	</select>
+     <div style="float:right;">
+      <input type="text" placeholder="search" id="query" onkeyup="filterfunction()">
+      <button onclick="search()" id="search">Search</button>
+     </div>
+  </div>
+  <div id="table">
+    <table>
+  <tr>
+    <th>IFSC</th>
+    <th>BANK_ID</th>
+    <th>BANK_NAME</th>
+    <th>BRANCH</th>
+    <th>ADDRESS</th>
+    <th>CITY</th>
+    <th>DISTRICT</th>
+    <th>STATE</th>
+  </tr>
+  
+</table>
+  </div>
+  <script>
+
+    // bring json data on load
+    window.onload = initApp;
+	
+	function initApp() {
+		fetchJSON("BANGALORE");
+	}
+	
+	var response;
+	var keysToParse = ['ifsc','bank_id','bank_name','branch','address','city','district','state'];
+	
+	function fetchJSON(city) {
+		var xhr = new XMLHttpRequest();
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState == 4 && xhr.status == 200) {
+				response = JSON.parse(xhr.responseText);
+				generateTableHTML(response);
+			}
+		}
+		xhr.open('GET', 'https://app.fyle.in/api/bank_branches?city=' + city.toUpperCase() + '&offset=0&limit=50', true);
+		xhr.send();
+	}
+	
+	function generateTableHTML(jsonResp) {
+		var html = '<table><tr>';
+		
+		keysToParse.forEach(function(key) {
+			html += '<th>' + key.toUpperCase() + '</th>';
+		});
+		
+		html += '</tr>';
+		
+		jsonResp.forEach(function(obj) {
+			html += '<tr>';
+			keysToParse.forEach(function(key) {
+				if (obj[key]) {
+					html += '<td>' + obj[key] + '</td>';
+				}
+			});
+			html += '</tr>';
+		});
+		
+		html += '</table>';
+		
+		document.getElementById('table').innerHTML = html;
+	}
+    function filterfunction(){
+		var input = document.getElementById("query");
+		var value = input.value.toLowerCase();
+		var filteredArr = response.filter(function(obj){
+			var keyFound = false;
+			keysToParse.forEach(function(key) {
+				if(obj[key].toString().toLowerCase().indexOf(value)!== -1)
+				{
+					keyFound = true;
+					return false;
+				}
+			});
+			if(keyFound==true)
+			{
+				return true; //assuring that filter will return that object.
+			}
+			return false;
+		});
+		generateTableHTML(filteredArr);
+	}
+
+  </script>
+</body>
